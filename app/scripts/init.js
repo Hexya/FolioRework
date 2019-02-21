@@ -27,6 +27,7 @@ let bloomPass, chromaticAberration, chromaticAberrationPass, chromaticAberration
 let params = {
     exposure: 0,
     bloomStrength: 1,
+
     bloomThreshold: 0,
     bloomRadius: .5
 };
@@ -152,8 +153,8 @@ export default class App {
 
         //RENDERER
         this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha:true } );
-        this.renderer.setClearColor( '0x0' );
-        //this.renderer.setClearColor( 0x22aa01, 0.1 );
+        //this.renderer.setClearColor( '0x0' );
+        this.renderer.setClearColor( 0x22aa01, 0 );
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
         this.renderer.setPixelRatio( window.devicePixelRatio );
@@ -165,6 +166,14 @@ export default class App {
         this.addComposer();
 
         this.onWindowResize();
+
+        window.addEventListener( 'mousemove', this.onMouseMove, false );
+    }
+
+    onMouseMove( event ) {
+        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        console.log(mouse.x)
     }
 
     planeGeometry() {
