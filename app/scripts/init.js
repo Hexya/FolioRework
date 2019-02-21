@@ -5,8 +5,6 @@ import objFile from '../assets/models/Concrete_Wall_01.obj';
 import fontFile from '../assets/fonts/Avenir.json';
 import {TweenMax, Power2, TimelineLite} from "gsap/TweenMax";
 
-let Stats = require('stats-js')
-
 import 'three/examples/js/postprocessing/EffectComposer';
 import 'three/examples/js/postprocessing/RenderPass';
 import 'three/examples/js/postprocessing/ShaderPass';
@@ -19,11 +17,9 @@ import 'three/examples/js/shaders/FXAAShader.js';
 import * as dat from 'dat.gui';
 import { TimelineMax, Power4 } from 'gsap';
 
+let Stats = require('stats-js')
 let clock = new THREE.Clock();
-let composer, renderPass, effect, shaderPass;
-
-let bloomPass, chromaticAberration, chromaticAberrationPass, chromaticAberrationFrag;
-
+let composer, renderPass, effect, shaderPass, bloomPass, chromaticAberration, chromaticAberrationPass, chromaticAberrationFrag;
 let params = {
     exposure: 0,
     bloomStrength: 1,
@@ -48,6 +44,11 @@ class LoadSound {
 export default class App {
 
     constructor() {
+        // Raycaster
+        this.raycaster = new THREE.Raycaster();
+        this.intersects = [];
+        this.mouse = new THREE.Vector2();
+
         // Stats
         this.stats = new Stats();
         this.stats.setMode(0); // 0: fps, 1: ms
@@ -67,7 +68,7 @@ export default class App {
         this.camera.position.y = 95;
         //this.camera.position.z = 30;
         this.camera.position.z = 55;
-        //this.controls = new OrbitControls(this.camera) // ==> HERE
+        this.controls = new OrbitControls(this.camera) // ==> HERE
 
         this.scene = new THREE.Scene();
 
@@ -76,12 +77,7 @@ export default class App {
         loader.load( objFile, ( modelObj )=> {
                 modelObj.traverse( function (child) {
                     if (child instanceof THREE.Mesh) {
-                        child.material = new THREE.MeshPhongMaterial(
-                            {
-                                color: 0xfafbfc,
-                                specular: 0xf00,
-                                shininess: 100,
-                            });
+                        child.material = new THREE.MeshPhongMaterial({color: 0xfafbfc, specular: 0xf00, shininess: 100,});
                         child.castShadow = true; //default is false
                         child.receiveShadow = true; //default is false
                         //console.log(child.name)
@@ -90,7 +86,7 @@ export default class App {
 
                         switch (child.name) {
                             case "Réseau_d'atomes.5":
-                                child.material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1} ) //cyan
+                                child.material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1} )
                                 break;
                             case "Fracture_Voronoï.2":
                                 child.material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1} )
@@ -99,14 +95,12 @@ export default class App {
                     }
                 })
                 this.scene.add( modelObj );
-                console.log(modelObj)
+                //console.log(modelObj)
                 modelObj.scale.set(.08,.08,.08)
                 //modelObj.children[1].material = new THREE.MeshPhongMaterial( { color: 0x0, emissive:0x0, specular:0xffffff, shininess: 10 } )
-                //modelObj.children[0].material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1 } )
-                //modelObj.children[1].material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1 } )
 
                 this.parameters(modelObj, this.dirLight);
-                this.movementAnim(modelObj);
+                this.scrollAnim(modelObj);
                 // Remove Loader
                 this.loaded();
             },
@@ -131,7 +125,12 @@ export default class App {
         } );
 
         //PLANE
-        this.planeGeometry();
+        //this.planeGeometry();
+        for(let i=0; i<5; i++) {
+            this.planeGeometry('planeNumber'+i, 'planeMat'+i,i);
+        }
+        console.log()
+
 
         //LIGHT
         //Directional (with shadow)
@@ -167,25 +166,31 @@ export default class App {
 
         this.onWindowResize();
 
-        window.addEventListener( 'mousemove', this.onMouseMove, false );
+        //window.addEventListener( 'mousemove', this.onMouseMove, false );
+        document.querySelector('canvas').addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
+
     }
 
     onMouseMove( event ) {
-        mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
-        mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
-        console.log(mouse.x)
+        this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
+        this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
+        //console.log(this.scene.children)
+        for ( var i = 0; i < this.scene.children.length; i++ ) {
+            this.scene.children[ i ].material.opacity = 0.2;
+        }
     }
 
-    planeGeometry() {
+    planeGeometry(planeNumber, planeMat,i) {
         let planeGeo = new THREE.PlaneBufferGeometry( 35, 25, 32 );
-        let planeMat = new THREE.MeshBasicMaterial( {color: 0xaa2222, side: THREE.DoubleSide, transparent:true, opacity: 0} );
-        let plane = new THREE.Mesh( planeGeo, planeMat );
-        plane.position.set(-16, 97, -10)
-        this.scene.add( plane );
+        planeMat = new THREE.MeshBasicMaterial( {color: 0xaa2222, side: THREE.DoubleSide, transparent:true, opacity: 1} );
+        planeNumber = new THREE.Mesh( planeGeo, planeMat );
+        planeNumber.position.set(-16 + (i*40), 97, -10);
+        planeNumber.name = 'Plane'+i;
+
+        this.scene.add( planeNumber );
     }
 
-    movementAnim(modelObj) {
-        console.log(modelObj)
+    scrollAnim(modelObj) {
         let tl = new TimelineLite();
         tl.add('intro')
             .to(modelObj.position, 2, {x: 0,y:77, ease:Circ.easeInOut, useFrames:true}, 'intro')
@@ -222,7 +227,20 @@ export default class App {
 
     //REQUEST ANIMATION LOOP
     render() {
-        this.stats.begin();
+        this.stats.begin()
+
+        //RAYCASTER
+        this.raycaster.setFromCamera( this.mouse, this.camera );
+        // calculate objects intersecting the picking ray
+        this.intersects = this.raycaster.intersectObjects( this.scene.children );
+
+        for ( var i = 0; i < this.intersects.length; i++ ) {
+            //console.log(this.intersects)
+            this.intersects[ i ].object.material.opacity = 1;
+            //console.log(this.intersects[i])
+        }
+
+
         let time = Date.now()/1000;// rayon
         this.dirLight.position.x += Math.cos(time)/2;
         this.dirLight.position.y += Math.sin(time)/2;
@@ -368,10 +386,8 @@ export default class App {
         bloomPass.threshold = params.bloomThreshold;
         bloomPass.strength = params.bloomStrength;
         bloomPass.radius = params.bloomRadius;
-        console.log(bloomPass)
 
         let antialiasPass = new THREE.ShaderPass(THREE.FXAAShader);
-        console.log(antialiasPass)
 
         composer.addPass(renderPass);
         composer.addPass(bloomPass);
