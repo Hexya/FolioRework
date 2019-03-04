@@ -1,11 +1,8 @@
 @font-face {
-    font-family: 'TragicMarker';
-    src: url('./assets/fonts/TragicMarker/TragicMarker.ttf');
+    font-family: 'Avenir';
+    src: url('./assets/fonts/SourceSansPro/SourceSansPro-Regular.ttf');
 }
-@font-face {
-    font-family: 'Poppins';
-    src: url('./assets/fonts/Poppins/Poppins-Light.ttf');
-}
+
 /*** ELEMENT THREE ***/
 .dg, .ac {z-index: 999 !important;}
 #stats {position: fixed;z-index: 999;}
@@ -14,15 +11,13 @@
 body {
     overflow-x: hidden;
     overflow-y: hidden;
+    font-family: Avenir;
 }
 * {
     margin: 0;
     padding: 0;
 }
-h1, p {
-    font-family: TragicMarker;
-    color: #fff;
-}
+
 audio {
     position: absolute;
     z-index: -1;
@@ -32,21 +27,14 @@ audio {
     position: absolute;
     height: 100vh;
     width: 100%;
-    background: #c8c8c8;
+    background: #000;
     z-index: 999;
 }
 #main {
     position: absolute;
     top: 0;
-    background: red;
 }
-#main .blue {
-    color: #blue;
-    font-size: 3em;
-    position: absolute;
-    top: 30vh;
-    left: 30%;
-}
+
 #main .gsap-btn, #main .gsap-btn-back {
     position: absolute;
     bottom: 40px;
@@ -54,40 +42,17 @@ audio {
     height: 40px;
     width: 40px;
     border-radius: 40px;
-    background: white;
+    background: #757575;
 }
 #main .gsap-btn-back {
     right: 100px;
 }
-.loader .loading-svg {
-    position: absolute;
-    bottom: 50%;
-    left: 50%;
-    transform: translateX(-50%);
-    height: 126px;
-    width: 191px;
-}
-.loader .loading-svg {
-    opacity: 0.3;
-}
-.loader .loaded-svg {
-    position: absolute;
-    bottom: 50%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 191px;
-    display: flex;
-    align-items: flex-end;
-    overflow: hidden;
-    height: 0px;
-}
 .loader .load-progress {
-    font-family: Poppins;
     position: absolute;
     top: calc(45% + 90px);
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #fff;
+    color: #FFB73A;
     font-size: 2em;
 }
 

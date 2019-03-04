@@ -3,6 +3,10 @@ let OrbitControls = require('three-orbit-controls')(THREE)
 import soundFile from '../assets/sound/ambiantSound.mp3';
 import objFile from '../assets/models/Concrete_Wall_01.obj';
 import fontFile from '../assets/fonts/Avenir.json';
+import RundFromLove from '../assets/img/project/RunFromLoveScreen.png';
+import SabineExp from '../assets/img/project/SabineScreen.png';
+import canvasSound from '../assets/img/project/CanvasSoundScreen.png';
+import DataViz from '../assets/img/project/DataVizScreen.png';
 import {TweenMax, Power2, TimelineLite} from "gsap/TweenMax";
 
 import 'three/examples/js/postprocessing/EffectComposer';
@@ -57,7 +61,7 @@ export default class App {
         this.stats.domElement.style.left = '0px';
         document.body.appendChild( this.stats.domElement );
 
-        // Sound
+        // SOUND
         this.play = new LoadSound();
 
         //THREE SCENE
@@ -66,7 +70,7 @@ export default class App {
 
         this.camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.01, 10000 );
         this.camera.position.y = 95;
-        //this.camera.position.z = 30;
+        //this.camera.position.z = 30; => no postproc
         this.camera.position.z = 55;
         this.controls = new OrbitControls(this.camera) // ==> HERE
 
@@ -126,14 +130,15 @@ export default class App {
 
         //PLANE
         //this.planeGeometry();
+        this.planeGroup = new THREE.Group();
         for(let i=0; i<5; i++) {
-            this.planeGeometry('planeNumber'+i, 'planeMat'+i,i);
+            this.planeGeometry('planeNumber'+i, i);
         }
-        console.log()
+        this.planePosition();
+
 
 
         //LIGHT
-        //Directional (with shadow)
         this.dirLight = new THREE.DirectionalLight( 0xffffff, 8 );//Power light
         this.dirLight.castShadow = true;
         this.dirLight.position.set(0,20,-50);
@@ -176,35 +181,64 @@ export default class App {
         this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
         //console.log(this.scene.children)
         for ( var i = 0; i < this.scene.children.length; i++ ) {
-            this.scene.children[ i ].material.opacity = 0.2;
+            //this.scene.children[ i ].material.opacity = 0.2; // ==> ON MOUSE MOOVE
         }
     }
 
-    planeGeometry(planeNumber, planeMat,i) {
-        let planeGeo = new THREE.PlaneBufferGeometry( 35, 25, 32 );
-        planeMat = new THREE.MeshBasicMaterial( {color: 0xaa2222, side: THREE.DoubleSide, transparent:true, opacity: 1} );
+    planeGeometry(planeNumber, i) {
+        let planeGeo = new THREE.PlaneBufferGeometry( 45, 25, 32 );
+        let planeMat = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, transparent:true, opacity: 0.3} ); // 0.2 to SEE
         planeNumber = new THREE.Mesh( planeGeo, planeMat );
-        planeNumber.position.set(-16 + (i*40), 97, -10);
         planeNumber.name = 'Plane'+i;
 
-        this.scene.add( planeNumber );
+        this.planeGroup.add(planeNumber);
+        this.scene.add(this.planeGroup);
     }
-
+    planePosition() {
+        //DEPART ESTATE
+        this.scene.getObjectByName('Plane0').material.map = new THREE.TextureLoader().load( RundFromLove );
+        //this.scene.getObjectByName('Plane0').material.color.set( 0xaaaa00 )// Yellow
+        this.scene.getObjectByName('Plane0').position.set(-13,20,-1);
+        this.scene.getObjectByName('Plane1').material.map = new THREE.TextureLoader().load( SabineExp );
+        this.scene.getObjectByName('Plane1').position.set(15,-12,-1);
+        this.scene.getObjectByName('Plane2').material.map = new THREE.TextureLoader().load( canvasSound );
+        this.scene.getObjectByName('Plane2').position.set(-9,-42,-1);
+        this.scene.getObjectByName('Plane3').material.map = new THREE.TextureLoader().load( DataViz );
+        this.scene.getObjectByName('Plane3').position.set(3,-75,-1);
+        this.scene.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
+        this.scene.getObjectByName('Plane4').position.set(-15,-112,-1);
+    }
     scrollAnim(modelObj) {
         let tl = new TimelineLite();
         tl.add('intro')
+            //.to(this.scene.getObjectByName('Plane0').position, 2 , { y:97, ease:Circ.easeInOut, useFrames:true})
+            .to(this.planeGroup.position, 2 , { y:77, ease:Circ.easeInOut, useFrames:true})
+            .to(this.scene.getObjectByName('Plane0').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1')
+            .to(this.fontMesh.material.color, 2 , { r: 0, g: 0, b: 0, ease:Expo.easeInOut, useFrames:true}, '-=3')
             .to(modelObj.position, 2, {x: 0,y:77, ease:Circ.easeInOut, useFrames:true}, 'intro')
             .addPause()
             .add('step1')
+            .to(this.scene.getObjectByName('Plane0').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
+            .to(this.planeGroup.position, 2 , { y:105, ease:Circ.easeInOut, useFrames:true}, '-=2')
+            .to(this.scene.getObjectByName('Plane1').material, 2 , { opacity: 0.5, ease:Circ.easeInOut, useFrames:true}, '-=1.8')
             .to(modelObj.position, 2, {x: 0,y:105, ease:Circ.easeInOut, useFrames:true}, 'step1')
             .addPause()
             .add('step2')
+            .to(this.scene.getObjectByName('Plane1').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
+            .to(this.planeGroup.position, 2 , { y:140, ease:Circ.easeInOut, useFrames:true}, '-=2')
+            .to(this.scene.getObjectByName('Plane2').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
             .to(modelObj.position, 2, {x: 0,y:140, ease:Circ.easeInOut, useFrames:true}, 'step2')
             .addPause()
             .add('step3')
+            .to(this.scene.getObjectByName('Plane2').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
+            .to(this.planeGroup.position, 2 , { y:170, ease:Circ.easeInOut, useFrames:true}, '-=2')
+            .to(this.scene.getObjectByName('Plane3').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
             .to(modelObj.position, 2, {x: 0,y:170, ease:Circ.easeInOut, useFrames:true}, 'step3')
             .addPause()
             .add('step4')
+            .to(this.scene.getObjectByName('Plane3').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
+            .to(this.planeGroup.position, 2 , { y:210, ease:Circ.easeInOut, useFrames:true}, '-=2')
+            .to(this.scene.getObjectByName('Plane4').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
             .to(modelObj.position, 2, {x: 0,y:210, ease:Circ.easeInOut, useFrames:true}, 'step4')
             .addPause()
             .pause();
@@ -221,7 +255,6 @@ export default class App {
         document.querySelector('.loader').classList.add('remove-scene')
         setTimeout(()=> {
             document.querySelector('.loader').remove();
-            //document.querySelector('.scene-cont').style.display = 'block';
         },500)
     }
 
@@ -236,7 +269,7 @@ export default class App {
 
         for ( var i = 0; i < this.intersects.length; i++ ) {
             //console.log(this.intersects)
-            this.intersects[ i ].object.material.opacity = 1;
+            //this.intersects[ i ].object.material.opacity = 1; //  ==> ON HOVER
             //console.log(this.intersects[i])
         }
 
