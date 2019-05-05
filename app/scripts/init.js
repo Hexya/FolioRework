@@ -55,7 +55,8 @@ export default class App {
 
     constructor() {
 
-        this.index = 0
+        this.index = 0;
+        this.timerStep = 0;
 
         // Raycaster
         this.raycaster = new THREE.Raycaster();
@@ -202,6 +203,11 @@ export default class App {
                 }
                 this.planePosition();
 
+                for(let i=0; i<2; i++) {
+                    this.beginAnimation('planeAnim', i);
+                }
+                this.positionAnimation();
+
 
                 // Remove Loader
                 this.loaded();
@@ -223,6 +229,7 @@ export default class App {
     addEvents() {
         document.querySelector('.gsap-btn').addEventListener('click',this.onNextClick.bind(this));
         document.querySelector('.gsap-btn-back').addEventListener('click',this.onPrevClick.bind(this));
+        window.addEventListener('mousewheel', this.mouseWheel.bind(this));
     }
 
     onNextClick() {
@@ -235,6 +242,23 @@ export default class App {
             index = this.index + 5;
         }
         this.goToIndex(index);
+    }
+
+    mouseWheel(e) {
+        //console.log(this.timerStep)
+        if(this.timerStep == 1) {
+            setTimeout(()=>{
+                this.timerStep = 0;
+            }, 1500)
+        }
+        if(this.timerStep == 0) {
+            if ( e.deltaY > 0 ) {
+                this.onNextClick()
+            } else if ( e.deltaY <= 0 ) {
+                this.onPrevClick()
+            }
+            this.timerStep = 1
+        }
     }
 
     goToIndex(index) {
@@ -271,7 +295,7 @@ export default class App {
         this.groupWall.add(this.planeGroup);
     }
     planePosition() {
-        console.log(this.box3)
+        //console.log(this.box3)
         const width = Math.abs(this.box3.min.x - this.box3.max.x)
         const height = Math.abs(this.box3.min.y - this.box3.max.y)
         const size = getPerspectiveSize(this.camera, this.camera.position.z); //Camera coord
@@ -306,6 +330,24 @@ export default class App {
         this.groupWall.getObjectByName('Plane3').position.set(3,-190,-1);
         this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
         this.groupWall.getObjectByName('Plane4').position.set(-15,-233,-1);*/
+    }
+
+    beginAnimation(planeAnim,i) {
+        let planeGeo = new THREE.PlaneBufferGeometry( window.innerWidth/10 *(i+1), window.innerHeight/10, 10 );
+        let planeMat = new THREE.MeshBasicMaterial( {color:0x000, side: THREE.FrontSide, transparent:true, opacity: 1} ); // 0.2 to SEE
+        planeAnim = new THREE.Mesh( planeGeo, planeMat );
+        planeAnim.name = 'PlaneAnim'+i
+
+        this.scene.add(planeAnim);
+    }
+
+    positionAnimation() {
+        this.scene.getObjectByName('PlaneAnim1').position.z = -75;
+        this.scene.getObjectByName('PlaneAnim0').position.z = -75;
+        this.scene.getObjectByName('PlaneAnim0').position.z = 10;
+        this.scene.getObjectByName('PlaneAnim0').material.opacity = 1;
+        TweenMax.to(this.scene.getObjectByName('PlaneAnim0').position, 2, { x:-window.innerWidth/4, ease:Circ.easeInOut })//wall
+        TweenMax.to(this.scene.getObjectByName('PlaneAnim1').position, 5, { x:window.innerWidth/4, ease:Circ.linear })//txt
     }
 
 
@@ -492,7 +534,18 @@ export default class App {
         grpRot.add(modelObj.rotation, 'x', 0, 5).listen();
         grpRot.add(modelObj.rotation, 'y', 0, 5).listen();
         grpRot.add(modelObj.rotation, 'z', 0, 5).listen();
+
+        gui.add( params, 'bloomThreshold', 0.0, 1.0 ).onChange( function ( value ) {
+            bloomPass.threshold = Number( value );
+        } );
+        gui.add( params, 'bloomStrength', 0.0, 3.0 ).onChange( function ( value ) {
+            bloomPass.strength = Number( value );
+        } );
+        gui.add( params, 'bloomRadius', 0.0, 1.0 ).step( 0.01 ).onChange( function ( value ) {
+            bloomPass.radius = Number( value );
+        } );
     }
+
 
     addComposer() {
         //composer

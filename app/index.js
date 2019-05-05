@@ -1,4 +1,4 @@
-import './index.css';
+import './index.less';
 
 import App from './scripts/init';
 import Type from './scripts/type';

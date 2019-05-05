@@ -72,10 +72,23 @@ module.exports = function(env) {
                     }
                 }
              },{
-                test: [/\.css$/, /\.less$/],
+                test: /\.css$/,
                 use: ExtractTextPlugin.extract({
                     use: 'css-loader'
                 })
+            },  {
+                test: /\.less$/,
+                use: [
+                    {
+                        loader: 'style-loader', // creates style nodes from JS strings
+                    },
+                    {
+                        loader: 'css-loader', // translates CSS into CommonJS
+                    },
+                    {
+                        loader: 'less-loader', // compiles Less to CSS
+                    },
+                ],
             },{
                 test: [/\.mp3$/, /\.png$/, /\.dae$/, /\.jpg$/, /\.obj$/, /\.fbx$/, /\.glb$/, /\.gltf$/, /\.json$/, /\.dae$/, /\.mtl$/, /\.fbx$/],
                 use: ['file-loader?name=[path][name].[hash].[ext]']

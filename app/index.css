@@ -1,13 +1,13 @@
-@font-face {
+/*@font-face {
     font-family: 'Avenir';
     src: url('./assets/fonts/SourceSansPro/SourceSansPro-Regular.ttf');
 }
 
-/*** ELEMENT THREE ***/
+/*** ELEMENT THREE ***
 .dg, .ac {z-index: 999 !important;}
 #stats {position: fixed;z-index: 999;}
 
-/*** DEFAULT ***/
+/*** DEFAULT ***
 body {
     overflow-x: hidden;
     overflow-y: hidden;
@@ -22,7 +22,7 @@ audio {
     position: absolute;
     z-index: -1;
 }
-/*** LOADER ***/
+/*** LOADER ***
 .loader {
     position: absolute;
     height: 100vh;
@@ -63,4 +63,4 @@ audio {
 @keyframes removeScene {
     from { opacity: 1; }
     to { opacity: 0; }
-}
+}*/
