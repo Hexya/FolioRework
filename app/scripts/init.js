@@ -14,7 +14,6 @@ import canvasSound from '../assets/img/project/CanvasSoundScreen.png';
 import low from '../assets/img/project/low.png';
 import DataViz from '../assets/img/project/DataVizScreen.png';
 import {TweenMax, Power2, TimelineLite} from 'gsap/TweenMax';
-import { getPerspectiveSize } from './utils/3d';
 import { GLTFLoader } from 'three/examples/js/loaders/GLTFLoader';
 
 import 'three/examples/js/postprocessing/EffectComposer';
@@ -28,6 +27,15 @@ import 'three/examples/js/shaders/FXAAShader.js';
 
 import * as dat from 'dat.gui';
 import { TimelineMax, Power4 } from 'gsap';
+
+// UTILS CLASS
+import { getPerspectiveSize } from './utils/3d';
+import { ConvertSpan } from './utils/Dom';
+import LightScene from './LightScene';
+
+//TEMPLATES
+let firstSceneTemplate = require('./Templates/firstSceneTemplate.tpl');
+let secSceneTemplate = require('./Templates/secSceneTemplate.tpl');
 
 let Stats = require('stats-js')
 let clock = new THREE.Clock();
@@ -58,6 +66,7 @@ export default class App {
 
         this.index = 0;
         this.timerStep = 0;
+        this.startTimer = 10; //10 to fast 1 to normal
 
         // Raycaster
         this.raycaster = new THREE.Raycaster();
@@ -100,15 +109,8 @@ export default class App {
             this.fontMesh.position.set(-70,17,-80);
         } );
 
-        /*//PLANE
-        //this.planeGeometry();
+        //PLANE
         this.planeGroup = new THREE.Group();
-        for(let i=0; i<5; i++) {
-            this.planeGeometry('planeNumber'+i, i);
-        }
-        this.planePosition();*/
-        this.planeGroup = new THREE.Group();
-
 
         //LIGHT
         this.dirLight = new THREE.DirectionalLight( 0xffffff, 8 );//Power light
@@ -154,6 +156,7 @@ export default class App {
 
     }
 
+    //WALL
     wallLoader() {
         this.groupWall = new THREE.Group();
         let wallLoader = new THREE.OBJLoader();
@@ -166,7 +169,6 @@ export default class App {
                         //console.log(child.name)
 
                         child.scale.set(1.5,1.5,1.5);
-                        console.log(child.name)
                         switch (child.name) {
                             case "Réseau_d'atomes.001":
                                 child.material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1} )
@@ -227,6 +229,7 @@ export default class App {
         );
     }
 
+    //ROCK
     rockLoader() {
         this.groupWall = new THREE.Group();
         let wallLoader = new THREE.OBJLoader();
@@ -239,8 +242,6 @@ export default class App {
                         //console.log(child.name)
 
                         child.scale.set(1.5,1.5,1.5);
-                        console.log(child.name)
-
                     }
                 })
                 this.box3 = new THREE.Box3().setFromObject(modelObj) //Max and min of object
@@ -262,6 +263,7 @@ export default class App {
         );
     }
 
+    //SCROLL
     addEvents() {
         document.querySelector('.gsap-btn').addEventListener('click',this.onNextClick.bind(this));
         document.querySelector('.gsap-btn-back').addEventListener('click',this.onPrevClick.bind(this));
@@ -310,6 +312,7 @@ export default class App {
         }
     }
 
+    //RAYCAST
     onMouseMove( event ) {
         this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
         this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
@@ -352,22 +355,9 @@ export default class App {
         this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
         this.groupWall.getObjectByName('Plane4').scale.set(this.reScale*10.35, this.reScale*10.35, this.reScale*10.35)
         this.groupWall.getObjectByName('Plane4').position.set(-window.innerWidth/width*12,-10*(this.reScale*258),-1);
-
-        /*//DEPART ESTATE
-        this.groupWall.getObjectByName('Plane0').material.map = new THREE.TextureLoader().load( RundFromLove );
-        //this.scene.getObjectByName('Plane0').material.color.set( 0xaaaa00 )// Yellow
-        //this.groupWall.getObjectByName('Plane0').position.set(width/-width*15,height/-height*107,-1);
-        this.groupWall.getObjectByName('Plane0').position.set(-13,-85,-1);
-        this.groupWall.getObjectByName('Plane1').material.map = new THREE.TextureLoader().load( SabineExp );
-        this.groupWall.getObjectByName('Plane1').position.set(15,-117,-1);
-        this.groupWall.getObjectByName('Plane2').material.map = new THREE.TextureLoader().load( canvasSound );
-        this.groupWall.getObjectByName('Plane2').position.set(-9,-155,-1);
-        this.groupWall.getObjectByName('Plane3').material.map = new THREE.TextureLoader().load( DataViz );
-        this.groupWall.getObjectByName('Plane3').position.set(3,-190,-1);
-        this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
-        this.groupWall.getObjectByName('Plane4').position.set(-15,-233,-1);*/
     }
 
+    //TWO PLANE BEGIN
     beginAnimation(planeAnim,i) {
         let planeGeo = new THREE.PlaneBufferGeometry( window.innerWidth/10 *(i+1), window.innerHeight/10, 10 );
         let planeMat = new THREE.MeshBasicMaterial( {color:0x000, side: THREE.FrontSide, transparent:true, opacity: 1} ); // 0.2 to SEE
@@ -376,14 +366,16 @@ export default class App {
 
         this.scene.add(planeAnim);
     }
-
+    //TWO PLANE ANIM AND DEZOOM SCENE
     positionAnimation() {
         this.scene.getObjectByName('PlaneAnim1').position.z = -75;
         this.scene.getObjectByName('PlaneAnim0').position.z = -75;
         this.scene.getObjectByName('PlaneAnim0').position.z = 10;
         this.scene.getObjectByName('PlaneAnim0').material.opacity = 1;
-        TweenMax.to(this.scene.getObjectByName('PlaneAnim0').position, 2, { x:-window.innerWidth/4, ease:Circ.easeInOut })//wall
-        TweenMax.to(this.scene.getObjectByName('PlaneAnim1').position, 5, { x:window.innerWidth/4, ease:Circ.linear })//txt
+        let tl = new TimelineMax
+        tl.to(this.scene.getObjectByName('PlaneAnim0').position, 2, { x:-window.innerWidth/4, ease:Circ.easeInOut },4.7/this.startTimer)//wall
+        .to(this.scene.getObjectByName('PlaneAnim1').position, 4, { x:window.innerWidth/4, ease:Circ.linear },5/this.startTimer)//txt
+        .from(this.scene.position,2, {z:80, ease:Circ.easeInOut},5/this.startTimer)
     }
 
 
@@ -437,8 +429,8 @@ export default class App {
         document.querySelector('.intro-txt').style.display = "block";
         let welcome = document.querySelector('.welcome');
         let intro = document.querySelector('.intro');
-        this.convertSpan(welcome);
-        this.convertSpan(intro);
+        new ConvertSpan(welcome);
+        new ConvertSpan(intro);
 
         let tl = new TimelineLite();
         tl.staggerFrom(welcome.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
@@ -450,13 +442,7 @@ export default class App {
                 document.querySelector('.loader').remove();
             },500)//remove
         //},5000)//txt
-        },500)//txt
-    }
-
-
-    //CONVERT TXT TO SPAN
-    convertSpan(element) {
-        element.innerHTML = element.textContent.replace(/[^\n- ]/g,"<span>$&</span>");
+        },5000/this.startTimer)//txt
     }
 
     //REQUEST ANIMATION LOOP
@@ -540,6 +526,9 @@ export default class App {
 
             //return height * -0.47 + size.height
             //console.log(this.modelObj)
+
+            document.querySelector('.txt-container').innerHTML = firstSceneTemplate;
+
             return 0
         }
         else {
@@ -556,12 +545,11 @@ export default class App {
                         child.geometry.attributes.position.array[1],//y
                         child.geometry.attributes.position.array[2]//z
                     )
-
                     //v3.y += Math.abs(this.currentBox3.min.y - this.currentBox3.max.y)
                     //v3.y = 0
                     //v3.y -= window.innerHeight/3
                     v3.y *= -this.reScale
-                    console.log('Project'+index+'Pos',v3);
+                    //console.log('Project'+index+'Pos',v3);
                     this.infoProject(index);
                     return v3.y
                 }
@@ -573,19 +561,19 @@ export default class App {
     infoProject(index) {
         switch ('Project'+index) {
             case 'Project1':
-                console.log('Project One');
+                document.querySelector('.txt-container').innerHTML = secSceneTemplate;
                 break;
             case 'Project2':
-                console.log('Project two');
+                document.querySelector('.txt-container').innerHTML = 'Project Two';
                 break;
             case 'Project3':
-                console.log('Project three');
+                document.querySelector('.txt-container').innerHTML = 'Project Three';
                 break;
             case 'Project4':
-                console.log('Project four');
+                document.querySelector('.txt-container').innerHTML = 'Project four';
                 break;
             case 'Project5':
-                console.log('Project five');
+                document.querySelector('.txt-container').innerHTML = 'Project Five';
                 break;
             default:
         }
