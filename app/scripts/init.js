@@ -5,6 +5,7 @@ import soundFile from '../assets/sound/ambiantSound.mp3';
 //import objFile from '../assets/models/Concrete_Wall_Fir.obj';
 //import objFile from '../assets/models/plz.obj';
 import objFile from '../assets/models/modelObj.obj';
+import rockFile from '../assets/models/Morceaux_01.obj';
 //import objFile from '../assets/models/modelObjMap.obj';
 import fontFile from '../assets/fonts/Avenir.json';
 import RundFromLove from '../assets/img/project/RunFromLoveScreen.png';
@@ -87,6 +88,7 @@ export default class App {
         this.scene = new THREE.Scene();
 
         this.wallLoader();
+        this.rockLoader();
 
         //TEXT
         let fontLoads = new THREE.FontLoader();
@@ -208,9 +210,43 @@ export default class App {
                 }
                 this.positionAnimation();
 
-
                 // Remove Loader
                 this.loaded();
+                this.modelObj = modelObj;
+                this.onWindowResize()
+            },
+            (xhr) => {
+                //console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+                let percent = (xhr.loaded / xhr.total * 100);
+                document.querySelector('.load-progress').innerHTML = Math.floor(percent) +'%';
+                //document.querySelector('.loader .loaded-svg').style.height = Math.floor(percent) + 'px';
+            },
+            (error) => {
+                console.log( 'An error happened' );
+            }
+        );
+    }
+
+    rockLoader() {
+        this.groupWall = new THREE.Group();
+        let wallLoader = new THREE.OBJLoader();
+        wallLoader.load( rockFile, ( modelObj )=> {
+                modelObj.traverse( function (child) {
+                    if (child instanceof THREE.Mesh) {
+                        child.material = new THREE.MeshPhongMaterial({color: 0xfafbfc, specular: 0xf00, shininess: 100,});
+                        child.castShadow = true; //default is false
+                        child.receiveShadow = true; //default is false
+                        //console.log(child.name)
+
+                        child.scale.set(1.5,1.5,1.5);
+                        console.log(child.name)
+
+                    }
+                })
+                this.box3 = new THREE.Box3().setFromObject(modelObj) //Max and min of object
+                this.groupWall.add( modelObj );
+                this.scene.add( this.groupWall );
+
                 this.modelObj = modelObj;
                 this.onWindowResize()
             },
@@ -394,11 +430,33 @@ export default class App {
         })
     }
 
+    //AFTER ELEMENT LOADED
     loaded() {
-        document.querySelector('.loader').classList.add('remove-scene')
-        setTimeout(()=> {
-            document.querySelector('.loader').remove();
-        },500)
+        //Temps de transition affichage text apres le load à 100%;
+        document.querySelector('.load-progress').remove();
+        document.querySelector('.intro-txt').style.display = "block";
+        let welcome = document.querySelector('.welcome');
+        let intro = document.querySelector('.intro');
+        this.convertSpan(welcome);
+        this.convertSpan(intro);
+
+        let tl = new TimelineLite();
+        tl.staggerFrom(welcome.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
+        .staggerFrom(intro.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
+        setTimeout(()=>{
+            //temps de transition remove
+            document.querySelector('.loader').classList.add('remove-scene');
+            setTimeout(()=> {
+                document.querySelector('.loader').remove();
+            },500)//remove
+        //},5000)//txt
+        },500)//txt
+    }
+
+
+    //CONVERT TXT TO SPAN
+    convertSpan(element) {
+        element.innerHTML = element.textContent.replace(/[^\n- ]/g,"<span>$&</span>");
     }
 
     //REQUEST ANIMATION LOOP
@@ -503,11 +561,33 @@ export default class App {
                     //v3.y = 0
                     //v3.y -= window.innerHeight/3
                     v3.y *= -this.reScale
-                    console.log('Project'+index+'Pos',v3)
+                    console.log('Project'+index+'Pos',v3);
+                    this.infoProject(index);
                     return v3.y
                 }
             }
 
+        }
+    }
+
+    infoProject(index) {
+        switch ('Project'+index) {
+            case 'Project1':
+                console.log('Project One');
+                break;
+            case 'Project2':
+                console.log('Project two');
+                break;
+            case 'Project3':
+                console.log('Project three');
+                break;
+            case 'Project4':
+                console.log('Project four');
+                break;
+            case 'Project5':
+                console.log('Project five');
+                break;
+            default:
         }
     }
 

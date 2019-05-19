@@ -2,6 +2,10 @@
   font-family: 'Avenir';
   src: url('./assets/fonts/SourceSansPro/SourceSansPro-Regular.ttf');
 }
+@font-face {
+  font-family: 'Avenir-Light';
+  src: url('./assets/fonts/SourceSansPro/SourceSansPro-ExtraLight.ttf');
+}
 
 /*** ELEMENT THREE ***/
 .dg, .ac {z-index: 999 !important;}
@@ -34,8 +38,20 @@ audio {
     top: calc(45% + 90px);
     left: 50%;
     transform: translate(-50%, -50%);
-    color: #FFB73A;
-    font-size: 2em;
+    color: #d0c9bf;
+    font-size: 1rem;
+  }
+  .intro-txt {
+    position: absolute;
+    display: none;
+    font-family: Avenir-Light;
+    top: calc(45% + 90px);
+    width: 290px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #d0c9bf;
+    text-align: center;
+    font-size: 1rem;
   }
 }
 
@@ -56,7 +72,7 @@ audio {
     right: 100px;
   }
 
-  .general {
+  .txt-container {
     color: #FFF;
     position: absolute;
     left: 10%;
@@ -86,16 +102,21 @@ audio {
     }
   }
   .contact {
-    height: 300px;
+    height: 200px;
     width: 200px;
     position: absolute;
     right: 20px;
     bottom: 20px;
-    background: rgba(255, 255, 255, 0.1);
+    //background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    opacity: .7;
     .git-icon {
-      height: 20px;
-      width: 20px;
+      height: 15px;
+      width: 15px;
       cursor: pointer;
+      margin-bottom: 20px;
       .st0 {
         fill: #FFF;
         transition: all .3s;
@@ -107,14 +128,32 @@ audio {
         }
       }
     }
+    p {
+      color: #FFF;
+      font-family: Avenir-Light;
+      cursor: pointer;
+      transition: all .05s;
+      &:hover {
+        color: #FFB73A;
+        transition: all .05s;
+        .hidari {
+          margin-right: 7px;
+          transition: all .05s;
+        }
+        .migi {
+          margin-right: 2px;
+          transition: all .05s;
+        }
+      }
+    }
   }
 }
 
 .remove-scene {
-  animation: removeScene .5s ease-out forwards;
+  animation: removeOpacity .5s ease-out forwards;
 }
 
-@keyframes removeScene {
+@keyframes removeOpacity {
   from { opacity: 1; }
   to { opacity: 0; }
 }
