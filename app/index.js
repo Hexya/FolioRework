@@ -7,4 +7,4 @@ import '../node_modules/three/examples/js/loaders/MTLLoader';
 import '../node_modules/three/examples/js/loaders/ColladaLoader';
 
 window.app = new App();
-window.app = new Type();
+//window.app = new Type();

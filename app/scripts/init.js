@@ -31,11 +31,17 @@ import { TimelineMax, Power4 } from 'gsap';
 // UTILS CLASS
 import { getPerspectiveSize } from './utils/3d';
 import { ConvertSpan } from './utils/Dom';
+import MouseWheel from './MouseWheel'
 import LightScene from './LightScene';
+import TypingEffect from './TypingEffect'
 
 //TEMPLATES
 let firstSceneTemplate = require('./Templates/firstSceneTemplate.tpl');
 let secSceneTemplate = require('./Templates/secSceneTemplate.tpl');
+let thirdSceneTemplate = require('./Templates/thirdSceneTemplate.tpl');
+let fourthSceneTemplate = require('./Templates/fourthSceneTemplate.tpl');
+let fifthSceneTemplate = require('./Templates/fifthSceneTemplate.tpl');
+let sixthSceneTemplate = require('./Templates/sixthSceneTemplate.tpl');
 
 let Stats = require('stats-js')
 let clock = new THREE.Clock();
@@ -67,6 +73,9 @@ export default class App {
         this.index = 0;
         this.timerStep = 0;
         this.startTimer = 10; //10 to fast 1 to normal
+        this.scrolls = [];
+        this.duration = .5;
+        this.delay = 0;
 
         // Raycaster
         this.raycaster = new THREE.Raycaster();
@@ -92,7 +101,7 @@ export default class App {
         this.camera.position.y = 0;
         //this.camera.position.z = 30; => no postproc
         this.camera.position.z = 55;
-        this.controls = new OrbitControls(this.camera) // ==> ORBITCONTROLS HERE
+        //this.controls = new OrbitControls(this.camera) // ==> ORBITCONTROLS HERE
 
         this.scene = new THREE.Scene();
 
@@ -153,7 +162,7 @@ export default class App {
         document.querySelector('canvas').addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
 
         this.addEvents()
-
+        //this.scroll = new MouseWheel(this.goToIndex.bind(this),this.index);
     }
 
     //WALL
@@ -282,21 +291,79 @@ export default class App {
         this.goToIndex(index);
     }
 
-    mouseWheel(e) {
+    mouseWheels(e) {
         //console.log(this.timerStep)
         if(this.timerStep == 1) {
             setTimeout(()=>{
                 this.timerStep = 0;
-            }, 1500)
+            }, 500)
         }
         if(this.timerStep == 0) {
             if ( e.deltaY > 0 ) {
                 this.onNextClick()
+                console.log('next')
             } else if ( e.deltaY <= 0 ) {
                 this.onPrevClick()
+                console.log('prev')
             }
             this.timerStep = 1
         }
+    }
+
+    next() {
+        window.clearTimeout(this.carouselTimeout);
+
+        this.animating = true;
+        this.startCarouselTimeout();
+
+        const add = Math.max(0, 1.52 - this.duration);
+        const delay = this.scrolls.length > 5 ? add : this.delay; //25
+        TweenMax.delayedCall(delay, () => {
+            this.animating = false;
+            this.scrolls = [];
+        })
+    }
+
+    startCarouselTimeout() {
+        this.carouselTimeout = setTimeout(() => {
+            this.onNextClick()
+            console.log('Next');
+        }, 50)
+    }
+
+    previous() {
+        window.clearTimeout(this.carouselTimeout);
+
+        this.animating = true;
+        this.backCarouselTimeout();
+
+        const add = Math.max(0, 1.52 - this.duration);
+        const delay = this.scrolls.length > 5 ? add : this.delay; //25
+        TweenMax.delayedCall(delay, () => {
+            this.animating = false;
+            this.scrolls = [];
+        })
+    }
+
+    backCarouselTimeout() {
+        this.carouselTimeout = setTimeout(() => {
+            this.onPrevClick()
+            console.log('prev');
+        }, 50)
+    }
+
+    mouseWheel(event) {
+        const delta = event.deltaY
+
+        if (!this.animating) {
+            if (delta > 0) {
+                this.next()
+            } else if (delta < 0) {
+                this.previous()
+            }
+        }
+
+        this.scrolls.push(this.scrolls.length)
     }
 
     goToIndex(index) {
@@ -343,15 +410,19 @@ export default class App {
         this.groupWall.getObjectByName('Plane0').material.map = new THREE.TextureLoader().load( RundFromLove );
         this.groupWall.getObjectByName('Plane0').scale.set(this.reScale*10.3, this.reScale*10.3, this.reScale*10.3)
         this.groupWall.getObjectByName('Plane0').position.set(-window.innerWidth/width*10,-10*(this.reScale*93),-1);
+
         this.groupWall.getObjectByName('Plane1').material.map = new THREE.TextureLoader().load( SabineExp );
         this.groupWall.getObjectByName('Plane1').scale.set(this.reScale*10.3, this.reScale*10.3, this.reScale*10.3)
         this.groupWall.getObjectByName('Plane1').position.set(window.innerWidth/width*10,-10*(this.reScale*133),-1);
+
         this.groupWall.getObjectByName('Plane2').material.map = new THREE.TextureLoader().load( canvasSound );
         this.groupWall.getObjectByName('Plane2').scale.set(this.reScale*10.35, this.reScale*10.35, this.reScale*10.35)
         this.groupWall.getObjectByName('Plane2').position.set(-window.innerWidth/width*6.5,-10*(this.reScale*171),-1);
+
         this.groupWall.getObjectByName('Plane3').material.map = new THREE.TextureLoader().load( DataViz );
         this.groupWall.getObjectByName('Plane3').scale.set(this.reScale*13, this.reScale*13, this.reScale*13)
         this.groupWall.getObjectByName('Plane3').position.set(window.innerWidth/width*3,-10*(this.reScale*211),-1);
+
         this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
         this.groupWall.getObjectByName('Plane4').scale.set(this.reScale*10.35, this.reScale*10.35, this.reScale*10.35)
         this.groupWall.getObjectByName('Plane4').position.set(-window.innerWidth/width*12,-10*(this.reScale*258),-1);
@@ -374,15 +445,15 @@ export default class App {
         this.scene.getObjectByName('PlaneAnim0').material.opacity = 1;
         let tl = new TimelineMax
         tl.to(this.scene.getObjectByName('PlaneAnim0').position, 2, { x:-window.innerWidth/4, ease:Circ.easeInOut },4.7/this.startTimer)//wall
-        .to(this.scene.getObjectByName('PlaneAnim1').position, 4, { x:window.innerWidth/4, ease:Circ.linear },5/this.startTimer)//txt
-        .from(this.scene.position,2, {z:80, ease:Circ.easeInOut},5/this.startTimer)
+            .to(this.scene.getObjectByName('PlaneAnim1').position, 4, { x:window.innerWidth/4, ease:Circ.linear },5/this.startTimer)//txt
+            .from(this.scene.position,2, {z:80, ease:Circ.easeInOut},5/this.startTimer)
     }
 
 
     scrollAnim(modelObj) {
         let tl = new TimelineLite();
         tl.add('intro')
-            //.to(this.scene.getObjectByName('Plane0').position, 2 , { y:97, ease:Circ.easeInOut, useFrames:true})
+        //.to(this.scene.getObjectByName('Plane0').position, 2 , { y:97, ease:Circ.easeInOut, useFrames:true})
             .to(this.planeGroup.position, 2 , { y:77, ease:Circ.easeInOut, useFrames:true})
             .to(this.scene.getObjectByName('Plane0').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1')
             .to(this.fontMesh.material.color, 2 , { r: 0, g: 0, b: 0, ease:Expo.easeInOut, useFrames:true}, '-=3')
@@ -427,21 +498,25 @@ export default class App {
         //Temps de transition affichage text apres le load à 100%;
         document.querySelector('.load-progress').remove();
         document.querySelector('.intro-txt').style.display = "block";
-        let welcome = document.querySelector('.welcome');
+        /*let welcome = document.querySelector('.welcome');
         let intro = document.querySelector('.intro');
         new ConvertSpan(welcome);
         new ConvertSpan(intro);
 
         let tl = new TimelineLite();
         tl.staggerFrom(welcome.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
-        .staggerFrom(intro.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
+            .staggerFrom(intro.querySelectorAll('span'),0.1, {autoAlpha:0},0.05);*/
+
+        //TYPING TEXT EFFECT
+        new TypingEffect('.welcome','.intro');
+
         setTimeout(()=>{
             //temps de transition remove
             document.querySelector('.loader').classList.add('remove-scene');
             setTimeout(()=> {
                 document.querySelector('.loader').remove();
             },500)//remove
-        //},5000)//txt
+            //},5000)//txt
         },5000/this.startTimer)//txt
     }
 
@@ -527,7 +602,10 @@ export default class App {
             //return height * -0.47 + size.height
             //console.log(this.modelObj)
 
+            //NEW CONTENT
+            document.querySelector('.txt-container').classList.remove('project-container-migi');
             document.querySelector('.txt-container').innerHTML = firstSceneTemplate;
+            new TypingEffect('.hidari .txt-f','.hidari .txt-s','.migi .txt-f','-=0', '.migi .txt-s','-=0');
 
             return 0
         }
@@ -561,22 +639,29 @@ export default class App {
     infoProject(index) {
         switch ('Project'+index) {
             case 'Project1':
-                document.querySelector('.txt-container').innerHTML = secSceneTemplate;
+                this.newContent(secSceneTemplate, 'migi', 'hidari');
                 break;
             case 'Project2':
-                document.querySelector('.txt-container').innerHTML = 'Project Two';
+                this.newContent(thirdSceneTemplate, 'hidari', 'migi');
                 break;
             case 'Project3':
-                document.querySelector('.txt-container').innerHTML = 'Project Three';
+                this.newContent(fourthSceneTemplate, 'migi', 'hidari');
                 break;
             case 'Project4':
-                document.querySelector('.txt-container').innerHTML = 'Project four';
+                this.newContent(fifthSceneTemplate, 'hidari', 'migi');
                 break;
             case 'Project5':
-                document.querySelector('.txt-container').innerHTML = 'Project Five';
+                this.newContent(sixthSceneTemplate, 'migi', 'hidari');
                 break;
             default:
         }
+    }
+
+    newContent(sceneTemplateNumber, newSide, removalSide) {
+        document.querySelector('.txt-container').classList.remove('project-container-'+ removalSide);
+        document.querySelector('.txt-container').classList.add('project-container-'+ newSide);
+        document.querySelector('.txt-container').innerHTML = sceneTemplateNumber;
+        new TypingEffect('.project-info .title','.project-info .desc','.project-info .date','-=1.5');
     }
 
     parameters(modelObj,light) {
