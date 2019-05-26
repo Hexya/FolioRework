@@ -179,3 +179,115 @@ audio {
   from { opacity: 1; }
   to { opacity: 0; }
 }
+
+.about-container {
+  position: absolute;
+  height: 100vh;
+  width: 100%;
+  //left: 100%;
+  background: #000;
+  z-index: 90;
+  opacity: 0;
+  visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  .name {
+    padding-top: 17vh;
+    height: 18vh;
+    p {
+      font-size: 4rem;
+      color: #FFB73A;
+      letter-spacing: 2.5rem;
+      font-family: Avenir-Light;
+    }
+  }
+  .formation {
+    margin-top: 30px;
+    color: #fff;
+    font-size: 14px;
+    letter-spacing: 4px;
+  }
+  .desc {
+    margin-top: 15vh;
+    color: #d0c9bf;
+    width: 470px;
+  }
+  .contact {
+    padding-top: 10vh;
+    height: 4vh;
+    width: 200px;
+    display: flex;
+    justify-content: space-around;
+    opacity: .7;
+    .git-icon {
+      height: 23px;
+      width: 23px;
+      cursor: pointer;
+      margin-bottom: 20px;
+      .st0 {
+        fill: #d0c9bf;
+        transition: all .3s;
+      }
+      &:hover {
+        .st0 {
+          transition: all .3s;
+          fill: #FFB73A;
+        }
+      }
+    }
+    p {
+      color: #FFF;
+      font-family: Avenir-Light;
+      cursor: pointer;
+      transition: all .05s;
+      &:hover {
+        color: #FFB73A;
+        transition: all .05s;
+        .hidari {
+          margin-right: 7px;
+          transition: all .05s;
+        }
+        .migi {
+          margin-right: 2px;
+          transition: all .05s;
+        }
+      }
+    }
+  }
+  .designer {
+    margin-top: 10vh;
+    color: rgba(208,201,191,.5);
+    font-size: 14px;
+    letter-spacing: 4px;
+    a {
+      color: rgba(208,201,191,.5);
+      &:hover {
+        color: rgba(208,201,191,1);
+      }
+    }
+  }
+  .back-arrow {
+    width: 30px;
+    height: auto;
+    cursor: pointer;
+    position: absolute;
+    top: 20px;
+    left: 30px;
+    .arrow-svg {
+      .st0{
+        fill:none;
+        stroke:#d0c9bf;
+        stroke-miterlimit:10;
+        transition: all .3s;
+      }
+      &:hover{
+        .st0 {
+          stroke:#FFB73A;
+          transition: all .3s;
+        }
+      }
+    }
+  }
+}

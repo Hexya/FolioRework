@@ -33,7 +33,7 @@ import { getPerspectiveSize } from './utils/3d';
 import { ConvertSpan } from './utils/Dom';
 import MouseWheel from './MouseWheel'
 import LightScene from './LightScene';
-import TypingEffect from './TypingEffect'
+import TypingEffect from './TypingEffect';
 
 //TEMPLATES
 let firstSceneTemplate = require('./Templates/firstSceneTemplate.tpl');
@@ -88,7 +88,7 @@ export default class App {
         this.stats.domElement.style.position = 'absolute';
         this.stats.domElement.style.top = '0px';
         this.stats.domElement.style.left = '0px';
-        document.body.appendChild( this.stats.domElement );
+        //document.body.appendChild( this.stats.domElement );
 
         // SOUND
         this.play = new LoadSound();
@@ -161,7 +161,8 @@ export default class App {
         //window.addEventListener( 'mousemove', this.onMouseMove, false );
         document.querySelector('canvas').addEventListener( 'mousemove', this.onMouseMove.bind(this), false );
 
-        this.addEvents()
+        this.aboutPage();
+        this.addEvents();
         //this.scroll = new MouseWheel(this.goToIndex.bind(this),this.index);
     }
 
@@ -277,6 +278,36 @@ export default class App {
         document.querySelector('.gsap-btn').addEventListener('click',this.onNextClick.bind(this));
         document.querySelector('.gsap-btn-back').addEventListener('click',this.onPrevClick.bind(this));
         window.addEventListener('mousewheel', this.mouseWheel.bind(this));
+    }
+
+    aboutPage() {
+
+        let about = document.querySelector('.about-container');
+        let tl = new TimelineLite();//Transition page
+        tl.to(this.scene.position, 2, {z:80, ease:Circ.easeInOut},5/this.startTimer)
+          .to(about, .5, {opacity:1, visibility:'visible', ease:Circ.easeInOut}, 1, '+=.5')
+          .addPause()
+          .pause();
+
+        let name = about.querySelector('.name p');
+        let contact = about.querySelectorAll('.contact a');
+        let tltxt = new TimelineLite();
+        tltxt.from(name, 2, {opacity:0, marginTop:'-40vh',ease:Circ.easeInOut},'+=1')
+             .from(contact, 1, {opacity:0, marginTop:'-3vh', ease:Circ.easeInOut}, '-=.5')
+             .addPause()
+             .pause();
+
+        document.querySelector('.contact p').addEventListener('click',()=> {
+            new TypingEffect('.about-container .formation','+=1');
+            new TypingEffect('.about-container .desc','+=0');
+            new TypingEffect('.about-container .designer','+=1.5');
+            tl.play();
+            tltxt.play();
+        })
+        document.querySelector('.back-arrow').addEventListener('click',()=> {
+            tl.reverse();
+        })
+
     }
 
     onNextClick() {
@@ -498,17 +529,9 @@ export default class App {
         //Temps de transition affichage text apres le load à 100%;
         document.querySelector('.load-progress').remove();
         document.querySelector('.intro-txt').style.display = "block";
-        /*let welcome = document.querySelector('.welcome');
-        let intro = document.querySelector('.intro');
-        new ConvertSpan(welcome);
-        new ConvertSpan(intro);
-
-        let tl = new TimelineLite();
-        tl.staggerFrom(welcome.querySelectorAll('span'),0.1, {autoAlpha:0},0.05)
-            .staggerFrom(intro.querySelectorAll('span'),0.1, {autoAlpha:0},0.05);*/
 
         //TYPING TEXT EFFECT
-        new TypingEffect('.welcome','.intro');
+        new TypingEffect('.welcome','+=0','.intro');
 
         setTimeout(()=>{
             //temps de transition remove
@@ -605,7 +628,7 @@ export default class App {
             //NEW CONTENT
             document.querySelector('.txt-container').classList.remove('project-container-migi');
             document.querySelector('.txt-container').innerHTML = firstSceneTemplate;
-            new TypingEffect('.hidari .txt-f','.hidari .txt-s','.migi .txt-f','-=0', '.migi .txt-s','-=0');
+            new TypingEffect('.hidari .txt-f','+=2','.hidari .txt-s','.migi .txt-f','-=0', '.migi .txt-s','-=0');
 
             return 0
         }
@@ -661,7 +684,7 @@ export default class App {
         document.querySelector('.txt-container').classList.remove('project-container-'+ removalSide);
         document.querySelector('.txt-container').classList.add('project-container-'+ newSide);
         document.querySelector('.txt-container').innerHTML = sceneTemplateNumber;
-        new TypingEffect('.project-info .title','.project-info .desc','.project-info .date','-=1.5');
+        new TypingEffect('.project-info .title','+=2','.project-info .desc','.project-info .date','-=1.5');
     }
 
     parameters(modelObj,light) {
