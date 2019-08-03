@@ -1,18 +1,11 @@
-import Sound from './Sound.js';
-let OrbitControls = require('three-orbit-controls')(THREE)
-let FBXLoader = require('three-fbx-loader');
-import soundFile from '../assets/sound/ambiantSound.mp3';
-//import objFile from '../assets/models/Concrete_Wall_Fir.obj';
-//import objFile from '../assets/models/plz.obj';
 import objFile from '../assets/models/modelObj.obj';
 import rockFile from '../assets/models/Morceaux_01.obj';
-//import objFile from '../assets/models/modelObjMap.obj';
 import fontFile from '../assets/fonts/Avenir.json';
 import RundFromLove from '../assets/img/project/RunFromLoveScreen.png';
 import SabineExp from '../assets/img/project/SabineScreen.png';
 import canvasSound from '../assets/img/project/CanvasSoundScreen.png';
-import low from '../assets/img/project/low.png';
 import DataViz from '../assets/img/project/DataVizScreen.png';
+import Ode from '../assets/img/project/OdeScreen.png';
 import {TweenMax, Power2, TimelineLite} from 'gsap/TweenMax';
 import { GLTFLoader } from 'three/examples/js/loaders/GLTFLoader';
 
@@ -25,46 +18,34 @@ import 'three/examples/js/shaders/LuminosityHighPassShader';
 import 'three/examples/js/postprocessing/UnrealBloomPass';
 import 'three/examples/js/shaders/FXAAShader.js';
 
-import * as dat from 'dat.gui';
 import { TimelineMax, Power4 } from 'gsap';
 
 // UTILS CLASS
 import { getPerspectiveSize } from './utils/3d';
-import { ConvertSpan } from './utils/Dom';
-import MouseWheel from './MouseWheel'
-import LightScene from './LightScene';
 import TypingEffect from './TypingEffect';
 
-//TEMPLATES
-let firstSceneTemplate = require('./Templates/firstSceneTemplate.tpl');
-let secSceneTemplate = require('./Templates/secSceneTemplate.tpl');
-let thirdSceneTemplate = require('./Templates/thirdSceneTemplate.tpl');
-let fourthSceneTemplate = require('./Templates/fourthSceneTemplate.tpl');
-let fifthSceneTemplate = require('./Templates/fifthSceneTemplate.tpl');
-let sixthSceneTemplate = require('./Templates/sixthSceneTemplate.tpl');
+//TEMPLATES TITLE
+let firstSceneTemplate = require('./Templates/Scenes/firstSceneTemplate.tpl');
+let secSceneTemplate = require('./Templates/Scenes/secSceneTemplate.tpl');
+let thirdSceneTemplate = require('./Templates/Scenes/thirdSceneTemplate.tpl');
+let fourthSceneTemplate = require('./Templates/Scenes/fourthSceneTemplate.tpl');
+let fifthSceneTemplate = require('./Templates/Scenes/fifthSceneTemplate.tpl');
+let sixthSceneTemplate = require('./Templates/Scenes/sixthSceneTemplate.tpl');
 
-let Stats = require('stats-js')
-let clock = new THREE.Clock();
-let composer, renderPass, effect, shaderPass, bloomPass, chromaticAberration, chromaticAberrationPass, chromaticAberrationFrag;
+//TEMPLATES CONTENT
+let firstProjectContent = require('./Templates/Projects/firstProjectContent.tpl');
+let secProjectContent = require('./Templates/Projects/secProjectContent.tpl');
+let thirdProjectContent = require('./Templates/Projects/thirdProjectContent.tpl');
+let fourthProjectContent = require('./Templates/Projects/fourthProjectContent.tpl');
+let fifthProjectContent = require('./Templates/Projects/fifthProjectContent.tpl');
+
+let composer, renderPass, bloomPass, chromaticAberration, chromaticAberrationPass;
 let params = {
     exposure: 0,
     bloomStrength: 1,
     bloomThreshold: 0,
     bloomRadius: .4
 };
-
-
-// TODO : add Dat.GUI
-// TODO : add Stats
-
-class LoadSound {
-    constructor() {
-        this.sound = new Sound(soundFile,125,0,this.startSound.bind(this),false)
-    }
-    startSound() {
-        //this.sound.play();
-    }
-}
 
 export default class App {
 
@@ -76,22 +57,14 @@ export default class App {
         this.scrolls = [];
         this.duration = .5;
         this.delay = 0;
+        this.waterDeform = 0;
+
+        this.inProject = false;
 
         // Raycaster
         this.raycaster = new THREE.Raycaster();
         this.intersects = [];
         this.mouse = new THREE.Vector2();
-
-        // Stats
-        this.stats = new Stats();
-        this.stats.setMode(0); // 0: fps, 1: ms
-        this.stats.domElement.style.position = 'absolute';
-        this.stats.domElement.style.top = '0px';
-        this.stats.domElement.style.left = '0px';
-        //document.body.appendChild( this.stats.domElement );
-
-        // SOUND
-        this.play = new LoadSound();
 
         //THREE SCENE
         this.container = document.querySelector( '#main' );
@@ -99,9 +72,7 @@ export default class App {
 
         this.camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.01, 10000 );
         this.camera.position.y = 0;
-        //this.camera.position.z = 30; => no postproc
         this.camera.position.z = 55;
-        //this.controls = new OrbitControls(this.camera) // ==> ORBITCONTROLS HERE
 
         this.scene = new THREE.Scene();
 
@@ -127,9 +98,6 @@ export default class App {
         this.dirLight.position.set(0,-150,-50);
         this.scene.add(this.dirLight);
 
-        this.dirLightHelper = new THREE.DirectionalLightHelper( this.dirLight, 10 );
-        this.scene.add( this.dirLightHelper );
-
         this.targetObject = new THREE.Object3D();
         this.scene.add(this.targetObject);
         this.targetObject.position.y = -150;
@@ -141,12 +109,8 @@ export default class App {
         this.baseLight.position.set(50,-60,-50);
         this.scene.add(this.baseLight);
 
-        this.baseLightHelper = new THREE.DirectionalLightHelper( this.baseLight, 1 );
-        this.scene.add( this.baseLightHelper );
-
         //RENDERER
         this.renderer = new THREE.WebGLRenderer( { antialias: true, alpha:true } );
-        //this.renderer.setClearColor( '0x0' );
         this.renderer.setClearColor( 0x22aa01, 0 );
         this.renderer.shadowMap.enabled = true;
         this.renderer.shadowMap.type = THREE.PCFShadowMap;
@@ -163,7 +127,6 @@ export default class App {
 
         this.aboutPage();
         this.addEvents();
-        //this.scroll = new MouseWheel(this.goToIndex.bind(this),this.index);
     }
 
     //WALL
@@ -176,7 +139,6 @@ export default class App {
                         child.material = new THREE.MeshPhongMaterial({color: 0xfafbfc, specular: 0xf00, shininess: 100,});
                         child.castShadow = true; //default is false
                         child.receiveShadow = true; //default is false
-                        //console.log(child.name)
 
                         child.scale.set(1.5,1.5,1.5);
                         switch (child.name) {
@@ -186,16 +148,6 @@ export default class App {
                             case "Fracture_Voronoï.001":
                                 child.material = new THREE.MeshStandardMaterial( { color: 0x414141, emissive:0x0, roughness: 0.29, metalness: 1} )
                                 break;
-                            case "Plane_Plane.000":
-                                child.material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, transparent:true, opacity: 0.3} ); // 0.2 to SEE
-                                child.material.map = new THREE.TextureLoader().load( low );
-                                //console.log(child.material.map)
-                                break;
-                            case "Cube_Cube.000":
-                                child.material = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, transparent:true, opacity: 0.3} ); // 0.2 to SEE
-                                child.material.map = new THREE.TextureLoader().load( low );
-                                //console.log(child.material.map)
-                                break;
                         }
                     }
                 })
@@ -204,12 +156,6 @@ export default class App {
                 this.scene.add( this.groupWall );
 
                 modelObj.position.y = this.box3.max.y * 0.5;
-                //console.log(modelObj)
-                //modelObj.scale.set(.08,.08,.08)
-                //modelObj.children[1].material = new THREE.MeshPhongMaterial( { color: 0x0, emissive:0x0, specular:0xffffff, shininess: 10 } )
-
-                this.parameters(modelObj, this.dirLight);
-                //this.scrollAnim(modelObj);
 
                 //PLANE
                 for(let i=0; i<5; i++) {
@@ -228,10 +174,8 @@ export default class App {
                 this.onWindowResize()
             },
             (xhr) => {
-                //console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
                 let percent = (xhr.loaded / xhr.total * 100);
                 document.querySelector('.load-progress').innerHTML = Math.floor(percent) +'%';
-                //document.querySelector('.loader .loaded-svg').style.height = Math.floor(percent) + 'px';
             },
             (error) => {
                 console.log( 'An error happened' );
@@ -275,16 +219,13 @@ export default class App {
 
     //SCROLL
     addEvents() {
-        document.querySelector('.gsap-btn').addEventListener('click',this.onNextClick.bind(this));
-        document.querySelector('.gsap-btn-back').addEventListener('click',this.onPrevClick.bind(this));
         window.addEventListener('mousewheel', this.mouseWheel.bind(this));
     }
 
     aboutPage() {
-
         let about = document.querySelector('.about-container');
         let tl = new TimelineLite();//Transition page
-        tl.to(this.scene.position, 2, {z:80, ease:Circ.easeInOut},5/this.startTimer)
+        tl.to(this.scene.position, 2, {z:80, ease:Circ.easeInOut},5/10)
           .to(about, .5, {opacity:1, visibility:'visible', ease:Circ.easeInOut}, 1, '+=.5')
           .addPause()
           .pause();
@@ -298,16 +239,15 @@ export default class App {
              .pause();
 
         document.querySelector('.contact p').addEventListener('click',()=> {
-            new TypingEffect('.about-container .formation','+=1');
-            new TypingEffect('.about-container .desc','+=0');
-            new TypingEffect('.about-container .designer','+=1.5');
+            new TypingEffect('.about-container .formation','0.05','+=1');
+            new TypingEffect('.about-container .desc','0.015','+=0');
+            new TypingEffect('.about-container .designer','0.05','+=1.5');
             tl.play();
             tltxt.play();
         })
         document.querySelector('.back-arrow').addEventListener('click',()=> {
             tl.reverse();
         })
-
     }
 
     onNextClick() {
@@ -320,25 +260,6 @@ export default class App {
             index = this.index + 5;
         }
         this.goToIndex(index);
-    }
-
-    mouseWheels(e) {
-        //console.log(this.timerStep)
-        if(this.timerStep == 1) {
-            setTimeout(()=>{
-                this.timerStep = 0;
-            }, 500)
-        }
-        if(this.timerStep == 0) {
-            if ( e.deltaY > 0 ) {
-                this.onNextClick()
-                console.log('next')
-            } else if ( e.deltaY <= 0 ) {
-                this.onPrevClick()
-                console.log('prev')
-            }
-            this.timerStep = 1
-        }
     }
 
     next() {
@@ -358,7 +279,6 @@ export default class App {
     startCarouselTimeout() {
         this.carouselTimeout = setTimeout(() => {
             this.onNextClick()
-            console.log('Next');
         }, 50)
     }
 
@@ -379,22 +299,22 @@ export default class App {
     backCarouselTimeout() {
         this.carouselTimeout = setTimeout(() => {
             this.onPrevClick()
-            console.log('prev');
         }, 50)
     }
 
     mouseWheel(event) {
-        const delta = event.deltaY
-
-        if (!this.animating) {
-            if (delta > 0) {
-                this.next()
-            } else if (delta < 0) {
-                this.previous()
+        //IF NOT IN PROJECT OR ABOUT
+        if(document.querySelector('.project-content')== null) {
+            const delta = event.deltaY
+            if (!this.animating) {
+                if (delta > 0) {
+                    this.next()
+                } else if (delta < 0) {
+                    this.previous()
+                }
             }
+            this.scrolls.push(this.scrolls.length)
         }
-
-        this.scrolls.push(this.scrolls.length)
     }
 
     goToIndex(index) {
@@ -410,27 +330,95 @@ export default class App {
         }
     }
 
-    //RAYCAST
     onMouseMove( event ) {
         this.mouse.x = ( event.clientX / window.innerWidth ) * 2 - 1;
         this.mouse.y = - ( event.clientY / window.innerHeight ) * 2 + 1;
         //console.log(this.scene.children)
-        for ( var i = 0; i < this.scene.children.length; i++ ) {
-            //NOMRAL LIGHT ON MOOVE
-            TweenMax.to(bloomPass, .3, {strength:1, ease:Sine.easeOut});
-            chromaticAberration.uniforms.uDistortion.value = .5;
+        //NOMRAL LIGHT ON MOOVE
+        TweenMax.to(bloomPass, .3, {strength:1, ease:Sine.easeOut});
+        chromaticAberration.uniforms.uDistortion.value = .5;
+        for ( var i = 0; i < this.planeGroup.children.length; i++ ) {
+            //NO DEFORMATION PROJECT
+            TweenMax.to(this.planeGroup.children[i].material.uniforms.uFrequency, .7, {value: 0., ease:Sine.easeInOut})
+            TweenMax.to(this.planeGroup.children[i].material.uniforms.uAmplitude, .7, {value: 0., ease:Sine.easeInOut})
         }
     }
 
     planeGeometry(planeNumber, i) {
+        let projectPic =[RundFromLove,SabineExp,canvasSound,DataViz,Ode]
+
+        const uniforms = {
+            time: { type: "f", value: 0 },
+            uAlpha: { type: "f", value: .55 },
+            uFrequency: { type:"f", value: 0.},
+            uAmplitude: { type:"f", value: 0.},
+            resolution: {
+                type: "v2",
+                value: new THREE.Vector2(innerWidth, innerHeight)
+            },
+            mouse: { type: "v2", value: new THREE.Vector2(0, 0) },
+            waveLength: { type: "f", value: 1.5 },
+            texture1: {
+                value: new THREE.TextureLoader().load(projectPic[i])
+            }
+        };
+        const getMaterial = () => {
+            return new THREE.ShaderMaterial({
+                side: THREE.DoubleSide,
+                uniforms: uniforms,
+                transparent:true,
+                vertexShader:
+                    ` varying vec2 vUv;
+  
+                  void main(){  
+                    vUv = uv; 
+                    //modelViewMatrix: es la posición y orientación de la cámara dentro de la escena
+                    //projectionMatrix: la proyección para la escena de la cámara incluyendo el campo de visión
+                    vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
+                    gl_Position = projectionMatrix * modelViewPosition;
+                  }`,
+                fragmentShader:
+                    ` uniform float time;
+                  uniform float uAlpha;
+                  uniform float uFrequency;
+                  uniform float uAmplitude;
+                  uniform vec2 resolution;
+                  uniform sampler2D texture1;
+                  
+                  varying vec2 vUv;
+                  
+                  void main() {  
+                    vec2 uv1 = vUv;
+                    // variable que contiene el eje de coordenadas
+                    vec2 uv = gl_FragCoord.xy/resolution.xy;
+                    
+                    float frequency = uFrequency;
+                    float amplitude = uAmplitude;
+                    
+                    float x = uv1.y * frequency + time * .7; 
+                    float y = uv1.x * frequency + time * .3;
+                    
+                    uv1.x += cos(x+y) * amplitude * cos(y);
+                    uv1.y += sin(x-y) * amplitude * cos(y);
+                
+                    vec4 rgba = texture2D(texture1, uv1);
+                    gl_FragColor = rgba;
+                    gl_FragColor *= uAlpha;
+                  }`
+            });
+        };
+
         let planeGeo = new THREE.PlaneBufferGeometry( 50, 30, 10 );
         let planeMat = new THREE.MeshBasicMaterial( {side: THREE.DoubleSide, transparent:true, opacity: 0.3} ); // 0.2 to SEE
-        planeNumber = new THREE.Mesh( planeGeo, planeMat );
+        let planeMatS = getMaterial();
+        planeMatS.opacity = 0.3;
+        planeNumber = new THREE.Mesh( planeGeo, planeMatS );
         planeNumber.name = 'Plane'+i;
 
         this.planeGroup.add(planeNumber);
         this.groupWall.add(this.planeGroup);
     }
+
     planePosition() {
         //console.log(this.box3)
         const width = Math.abs(this.box3.min.x - this.box3.max.x)
@@ -454,7 +442,7 @@ export default class App {
         this.groupWall.getObjectByName('Plane3').scale.set(this.reScale*13, this.reScale*13, this.reScale*13)
         this.groupWall.getObjectByName('Plane3').position.set(window.innerWidth/width*3,-10*(this.reScale*211),-1);
 
-        this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( canvasSound );
+        this.groupWall.getObjectByName('Plane4').material.map = new THREE.TextureLoader().load( Ode );
         this.groupWall.getObjectByName('Plane4').scale.set(this.reScale*10.35, this.reScale*10.35, this.reScale*10.35)
         this.groupWall.getObjectByName('Plane4').position.set(-window.innerWidth/width*12,-10*(this.reScale*258),-1);
     }
@@ -481,49 +469,6 @@ export default class App {
     }
 
 
-    scrollAnim(modelObj) {
-        let tl = new TimelineLite();
-        tl.add('intro')
-        //.to(this.scene.getObjectByName('Plane0').position, 2 , { y:97, ease:Circ.easeInOut, useFrames:true})
-            .to(this.planeGroup.position, 2 , { y:77, ease:Circ.easeInOut, useFrames:true})
-            .to(this.scene.getObjectByName('Plane0').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1')
-            .to(this.fontMesh.material.color, 2 , { r: 0, g: 0, b: 0, ease:Expo.easeInOut, useFrames:true}, '-=3')
-            .to(modelObj.position, 2, {x: 0,y:77, ease:Circ.easeInOut, useFrames:true}, 'intro')
-            .addPause()
-            .add('step1')
-            .to(this.scene.getObjectByName('Plane0').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
-            .to(this.planeGroup.position, 2 , { y:105, ease:Circ.easeInOut, useFrames:true}, '-=2')
-            .to(this.scene.getObjectByName('Plane1').material, 2 , { opacity: 0.5, ease:Circ.easeInOut, useFrames:true}, '-=1.8')
-            .to(modelObj.position, 2, {x: 0,y:105, ease:Circ.easeInOut, useFrames:true}, 'step1')
-            .addPause()
-            .add('step2')
-            .to(this.scene.getObjectByName('Plane1').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
-            .to(this.planeGroup.position, 2 , { y:140, ease:Circ.easeInOut, useFrames:true}, '-=2')
-            .to(this.scene.getObjectByName('Plane2').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
-            .to(modelObj.position, 2, {x: 0,y:140, ease:Circ.easeInOut, useFrames:true}, 'step2')
-            .addPause()
-            .add('step3')
-            .to(this.scene.getObjectByName('Plane2').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
-            .to(this.planeGroup.position, 2 , { y:170, ease:Circ.easeInOut, useFrames:true}, '-=2')
-            .to(this.scene.getObjectByName('Plane3').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
-            .to(modelObj.position, 2, {x: 0,y:170, ease:Circ.easeInOut, useFrames:true}, 'step3')
-            .addPause()
-            .add('step4')
-            .to(this.scene.getObjectByName('Plane3').material, 2 , { opacity: 0, ease:Circ.easeInOut, useFrames:true})
-            .to(this.planeGroup.position, 2 , { y:210, ease:Circ.easeInOut, useFrames:true}, '-=2')
-            .to(this.scene.getObjectByName('Plane4').material, 2 , { opacity: 1, ease:Circ.easeInOut, useFrames:true}, '-=1.5')
-            .to(modelObj.position, 2, {x: 0,y:210, ease:Circ.easeInOut, useFrames:true}, 'step4')
-            .addPause()
-            .pause();
-
-        document.querySelector('.gsap-btn').addEventListener('click',()=> {
-            tl.play();
-        })
-        document.querySelector('.gsap-btn-back').addEventListener('click',()=> {
-            tl.reverse();
-        })
-    }
-
     //AFTER ELEMENT LOADED
     loaded() {
         //Temps de transition affichage text apres le load à 100%;
@@ -531,7 +476,7 @@ export default class App {
         document.querySelector('.intro-txt').style.display = "block";
 
         //TYPING TEXT EFFECT
-        new TypingEffect('.welcome','+=0','.intro');
+        new TypingEffect('.welcome','0.05','+=0','.intro');
 
         setTimeout(()=>{
             //temps de transition remove
@@ -543,25 +488,108 @@ export default class App {
         },5000/this.startTimer)//txt
     }
 
+    projectPage(templateProject) {
+        document.querySelector('.project-container').innerHTML = templateProject;
+
+        let project = document.querySelector('.project-container');
+        let tl = new TimelineLite();//Transition projectPage
+        tl.to(project, .5, {opacity:1, visibility:'visible', ease:Circ.easeInOut}, 1, '+=.5')
+            .addPause()
+            .pause();
+
+            new TypingEffect('.project-content .title','0.05','+=1');
+            new TypingEffect('.project-content .desc','0.03','-=1.2');
+            new TypingEffect('.project-content .see-more .date','0.05','+=1.5');
+            new TypingEffect('.project-content .see-more .link','0.05','+=1.2');
+            tl.play();
+
+        let tlRow = new TimelineLite()
+        tlRow.staggerFrom(document.querySelectorAll('.row'),0.5, {autoAlpha:0},'0.5','+=1')
+             .staggerFrom(document.querySelectorAll('.img-row'),1, {autoAlpha:0},'0.5','-=0.5')
+
+
+    }
     //REQUEST ANIMATION LOOP
     render() {
-        this.stats.begin()
+
         //RAYCASTER
         this.raycaster.setFromCamera( this.mouse, this.camera );
         // calculate objects intersecting the picking ray
         this.intersects = this.raycaster.intersectObjects( this.planeGroup.children );
+
         document.body.style.cursor = "default";
         for ( let i = 0; i < this.intersects.length; i++ ) {
-            //console.log(this.intersects)
+
             //POWER LIGHT ON HOVER
             TweenMax.to(bloomPass, .3, {strength:1.5, ease:Sine.easeOut});
             chromaticAberration.uniforms.uDistortion.value = 2.;
             document.body.style.cursor = "pointer";
-            if(this.intersects.length != 0 && this.intersects[i].object.name == 'Plane'+i) {
-                document.body.addEventListener('click', () => {
-                    if(this.intersects.length != 0) {
-                        console.log(this.intersects[i].object.name)
+            //console.log(this.intersects[0].object)
+
+            //ACTUALISE WAVE ON HOVER
+            this.waterDeform += 0.1;
+            TweenMax.to(this.intersects[0].object.material.uniforms.time, .7, {value:this.waterDeform, ease:Sine.easeInOut})
+            TweenMax.to(this.intersects[0].object.material.uniforms.uFrequency, .7, {value: 15., ease:Sine.easeInOut})
+            TweenMax.to(this.intersects[0].object.material.uniforms.uAmplitude, .7, {value: .15, ease:Sine.easeInOut})
+
+            //CLICK ON PROJECT
+            document.body.addEventListener('click', () => {
+                if(this.scene.position.z != 80 && this.inProject == false) {
+                    if (this.intersects.length != 0 && this.intersects[0].object.name == 'Plane' + i) {
+                        console.log(this.intersects[0].object)
+                        let title = document.querySelector('.txt-container')
+                        let tl = new TimelineLite();
+                        tl.to(this.scene.position, 2, {z:80, ease:Circ.easeInOut}) //ZOOM
+                            .to(title, 2, {opacity:0, ease:Circ.easeInOut}, '-=2') // DISAPPEAR TITLE
+                            .to(title, 1, {visibility:'hidden', ease:Circ.easeInOut}) // DISAPPEAR TITLE
+                            .addPause().pause()
+                        tl.play()
+                        //console.log('Zoom project')
+                        switch (this.intersects[0].object.name) {
+                            case 'Plane0':
+                                this.projectPage(firstProjectContent);
+                                break;
+                            case 'Plane1':
+                                this.projectPage(secProjectContent);
+                                break;
+                            case 'Plane2':
+                                this.projectPage(thirdProjectContent);
+                                break;
+                            case 'Plane3':
+                                this.projectPage(fourthProjectContent);
+                                break;
+                            case 'Plane4':
+                                this.projectPage(fifthProjectContent);
+                                break;
+                            default:
+                        }
+                        this.inProject = true
                     }
+                }
+            })
+            //REMOVE PROJECT PAGE
+            if (this.inProject == true) {
+                this.inProject = false;
+                document.querySelector('.project-arrow').addEventListener('click', () => {
+                    let project = document.querySelector('.project-container');
+                    let tlOpacity = new TimelineLite();//Transition page
+                    tlOpacity.to(project, .5, {opacity:0, visibility:'hidden', ease:Circ.easeInOut}, 1, '+=.5')
+                        .addPause().pause();
+                    tlOpacity.play();
+
+                    let title = document.querySelector('.txt-container')
+                    let tl = new TimelineLite();
+                    tl.to(this.scene.position, 2, {z:0, ease:Circ.easeInOut}) //UNZOOM
+                        .to(title, .2, {visibility:'visible', ease:Circ.easeInOut},'-=1') //REAPPEAR TITLE
+                        .to(title, 1, {opacity:1, ease:Circ.easeInOut}, '-=1.2' ) //REAPPEAR TITLE
+                        .addPause().pause();
+                    tl.play();
+                    //console.log('Unzoom project')
+
+                    //REMOVE CONTENT
+                    setTimeout(()=> {
+                        document.querySelector('.project-container').innerHTML = ''
+                    },1500)
                 })
             }
         }
@@ -578,21 +606,16 @@ export default class App {
         this.baseLight.position.x -= Math.cos(time)/2;
         this.baseLight.position.y -= Math.sin(time)/2;
 
-        this.dirLightHelper.update()
-
         //RENDER
         //this.renderer.render( this.scene, this.camera ); //Default
         composer.render();
-        this.stats.end();
     }
 
     onWindowResize() {
         const size = getPerspectiveSize(this.camera, this.camera.position.z); //Camera coord
         this.reScale = (size.width / (Math.abs(this.box3.max.x) + Math.abs(this.box3.min.x))) * 1.2;
-        console.log('rescale',this.reScale)
         this.modelObj.scale.set(this.reScale, this.reScale, this.reScale)
         this.currentBox3 = new THREE.Box3().setFromObject(this.modelObj)
-
 
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
@@ -605,11 +628,6 @@ export default class App {
         this.setWallPosition()
     }
 
-    tweenWallPosition() {
-        const index = this.index
-        const y = this.getWallPositionForIndex(index)
-    }
-
     setWallPosition() {
         const index = this.index
         const y = this.getWallPositionForIndex(index)
@@ -619,38 +637,25 @@ export default class App {
 
     getWallPositionForIndex(index) {
         if (index === 0) {
-            const height = Math.abs(this.box3.min.y - this.box3.max.y)
-            const size = getPerspectiveSize(this.camera, this.camera.position.z); //Camera coord
-
-            //return height * -0.47 + size.height
-            //console.log(this.modelObj)
-
             //NEW CONTENT
             document.querySelector('.txt-container').classList.remove('project-container-migi');
             document.querySelector('.txt-container').innerHTML = firstSceneTemplate;
-            new TypingEffect('.hidari .txt-f','+=2','.hidari .txt-s','.migi .txt-f','-=0', '.migi .txt-s','-=0');
+            new TypingEffect('.hidari .txt-f','0.05','+=2','.hidari .txt-s','.migi .txt-f','-=0', '.migi .txt-s','-=0');
 
             return 0
         }
         else {
-            //console.log(this.modelObj)
             for (let i = 0; i<this.modelObj.children.length; i++) {
                 const child = this.modelObj.children[i]
                 let name = child.name;
                 name = name.substring(0,11);
-                //console.log('Project'+i+'Pos')
-                //console.log(name)
                 if(name == 'Project'+index+'Pos') {
                     const v3 = new THREE.Vector3(
                         child.geometry.attributes.position.array[0],//x
                         child.geometry.attributes.position.array[1],//y
                         child.geometry.attributes.position.array[2]//z
                     )
-                    //v3.y += Math.abs(this.currentBox3.min.y - this.currentBox3.max.y)
-                    //v3.y = 0
-                    //v3.y -= window.innerHeight/3
                     v3.y *= -this.reScale
-                    //console.log('Project'+index+'Pos',v3);
                     this.infoProject(index);
                     return v3.y
                 }
@@ -684,44 +689,8 @@ export default class App {
         document.querySelector('.txt-container').classList.remove('project-container-'+ removalSide);
         document.querySelector('.txt-container').classList.add('project-container-'+ newSide);
         document.querySelector('.txt-container').innerHTML = sceneTemplateNumber;
-        new TypingEffect('.project-info .title','+=2','.project-info .desc','.project-info .date','-=1.5');
+        new TypingEffect('.project-info .title','0.05','+=2','.project-info .desc','.project-info .date','-=1.5');
     }
-
-    parameters(modelObj,light) {
-        //Gui
-        //console.log(modelObj)
-        let gui = new dat.GUI();
-
-        let Meshes = gui.addFolder('Meshes');
-        let poslight = Meshes.addFolder('Light');
-        poslight.add(light.position, 'x', -500, 500).listen();
-        poslight.add(light.position, 'y', -500, 500).listen();
-        poslight.add(light.position, 'z', -500, 500).listen();
-        let grpElem = Meshes.addFolder('Group');
-        let grpPos = grpElem.addFolder('Group Position');
-        grpPos.add(modelObj.position, 'x', -500, 500).listen();
-        grpPos.add(modelObj.position, 'y', -500, 500).listen();
-        grpPos.add(modelObj.position, 'z', -500, 500).listen();
-        let grpScale = grpElem.addFolder('Group Scale');
-        grpScale.add(modelObj.scale, 'x', 0, 5).listen();
-        grpScale.add(modelObj.scale, 'y', 0, 5).listen();
-        grpScale.add(modelObj.scale, 'z', 0, 5).listen();
-        let grpRot = grpElem.addFolder('Group Rotation');
-        grpRot.add(modelObj.rotation, 'x', 0, 5).listen();
-        grpRot.add(modelObj.rotation, 'y', 0, 5).listen();
-        grpRot.add(modelObj.rotation, 'z', 0, 5).listen();
-
-        gui.add( params, 'bloomThreshold', 0.0, 1.0 ).onChange( function ( value ) {
-            bloomPass.threshold = Number( value );
-        } );
-        gui.add( params, 'bloomStrength', 0.0, 3.0 ).onChange( function ( value ) {
-            bloomPass.strength = Number( value );
-        } );
-        gui.add( params, 'bloomRadius', 0.0, 1.0 ).step( 0.01 ).onChange( function ( value ) {
-            bloomPass.radius = Number( value );
-        } );
-    }
-
 
     addComposer() {
         //composer

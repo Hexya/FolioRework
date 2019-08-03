@@ -1,5 +1,3 @@
-import './index.less';
-
 import App from './scripts/init';
 import '../node_modules/three/examples/js/loaders/OBJLoader';
 import '../node_modules/three/examples/js/loaders/MTLLoader';
